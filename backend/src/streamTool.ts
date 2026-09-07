@@ -4,14 +4,19 @@ import {z} from "zod"
 import axios from "axios"
 
 interface StreamFinalOutput{
+     founderChitha:string
+}
+interface InputData{
+     
     founderName:string,
     founderEmail:string,
-    founderDescription:string
+    founderDescription:string 
 }
-const OutputSchema=z.object({
-    founderName:z.string(),
-    founderEmail:z.email(),
-    founderDescription:z.string()
+const InputSchema=z.object({
+     
+    founderName:z.string().describe("Give me founder name"),
+    founderEmail:z.string().describe("Email of the founder"),
+    founderDescription:z.string().describe("Give the founder description")
 })
 class StreamTool extends MCPTool<StreamFinalOutput>{
         name="StreamTolol";
@@ -30,41 +35,41 @@ class StreamTool extends MCPTool<StreamFinalOutput>{
                 description:"founder Description"
             }
         }
-        async execute({founderName,founderEmail,founderDescription}){
-            const output=await axios.get("Url",{
+        async execute(founderName:string,founderEmail:string,founderDescription:string){
+            try{
+                //have to use openAi here
+            const output=await axios.get(`https://aiefjhap.com/${founderName}/${founderEmail}/${founderDescription}`,{
+                //http stream should have fetch 
                 headers:{
                     "Content-type":"Application/json"
                 }
             })
-            return output
+            if(!output){
+                throw new Error("Api Error")
+            }
+             
+        }
+            catch(error:any){
+                throw new Error(`Failed to fetch repo data: ${error.message}`)
+            }
         }
 }
 
 export async function httpStreamTool(req:Request,res:Response):Promise<StreamFinalOutput>{
-      const data:StreamFinalOutput=req.body;
-
-      const server = new MCPServer({
-        transport: {
-          type: "http-stream",
-          options: {
-            port: 1337,
-            responseMode: "stream",
-            //maxMessageSize: "4mb",
-            cors: {
-              allowOrigin: "*",
-              allowMethods: "GET, POST, DELETE, OPTIONS", // Access-Control-Allow-Methods
-              allowHeaders: "Content-Type, Accept, Authorization, x-api-key, Mcp-Session-Id, Last-Event-ID", // Access-Control-Allow-Headers
-              exposeHeaders: "Content-Type, Authorization, x-api-key, Mcp-Session-Id"
-            },
-          //   resumability: {
-          //     enabled: false,               // Enable stream resumability (default: false)
-          //     historyDuration: 300000       // How long to keep message history in ms (default: 300000 - 5 minutes)
-          //   }
-          }
-        }
-      });
-      
-      const finalOutput=server.start();
-      res.
-
+      const data:InputData=req.body;
+       res.setHeader('Content-Type', 'text/plain');
+        res.setHeader('Transfer-Encoding', 'chunked');
+       try{
+         const StreamOutput=new StreamTool()
+       const streamed=await StreamOutput.execute(data.founderName,data.founderEmail,data.founderDescription)
+       res.write(streamed)
+       }
+       catch(error:any){
+        console.log("stream error: ", error);
+        res.status(500).send(error.message);
+      }
+    finally{
+        res.end();
+        console.log('Stream closed');
+    }
 }
