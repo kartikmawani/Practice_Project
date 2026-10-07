@@ -34,6 +34,7 @@ router.post('/api/leads', async (req, res) => {
     const mxRecords = await dns.resolveMx(domain);
     if (!mxRecords || mxRecords.length === 0) {
         console.log("Bounce risk: No MX records found");
+        //use try catch here
         return ;
     }
         const controller = new AbortController();
