@@ -21,10 +21,8 @@ async function dataManager(req:Request,res:Response){
         const String=JSON.stringify(userData)
         const hashedString=md5(String)
         if(res.headers["If-None-Match"]===hashedString){
-            return res.status(304).json({
-                message:"Data has not been changed"
-            })
-
+            return res.status(304).send()
+        
         }
         res.setHeader("Etag",hashedString)
         return res.status(200).json({
